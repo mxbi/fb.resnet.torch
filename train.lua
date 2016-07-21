@@ -92,7 +92,7 @@ function Trainer:test(epoch, dataloader)
    local size = dataloader:size()
 
    local nCrops = self.opt.tenCrop and 10 or 1
-   local top1Sum, top5Sum = 0.0, 0.0
+   local top1Sum, top5Sum, lossSum = 0.0, 0.0, 0.0
    local N = 0
 
    self.model:evaluate()
