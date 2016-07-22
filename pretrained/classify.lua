@@ -30,10 +30,24 @@ for _, f in ipairs(arg) do
    end
 end
 
+--local gpus = torch.range(1, 4):totable()
+--local fastest, benchmark = cudnn.fastest, cudnn.benchmark
+
+--local dpt = nn.DataParallelTable(1, true, true)
+--   :add(model, gpus)
+--   :threads(function()
+--      local cudnn = require 'cudnn'
+--      cudnn.fastest, cudnn.benchmark = fastest, benchmark
+--   end)
+--dpt.gradInput = nil
+
+--model = dpt:cuda()
 
 -- Load the model
 local model = torch.load(arg[1])
 local softMaxLayer = cudnn.SoftMax():cuda()
+
+model:cuda()
 
 -- add Softmax layer
 model:add(softMaxLayer)
@@ -50,10 +64,10 @@ local meanstd = {
 local transform = t.Compose{
    t.Scale(256),
    t.ColorNormalize(meanstd),
-   t.CenterCrop(224),
+   t.RandomCrop(224),
 }
 
-local N = 5
+local N = 10
 
 for i=2,#arg do
    -- load the image as a RGB float tensor with values 0..1
@@ -70,10 +84,10 @@ for i=2,#arg do
    local output = model:forward(batch:cuda()):squeeze()
 
    -- Get the top 5 class indexes and probabilities
-   local probs, indexes = output:topk(N, true, true)
-   print('Classes for', arg[i])
+   local probs, indexes = output:topk(N, false, false)
+   print(arg[i])
    for n=1,N do
-     print(probs[n], imagenetLabel[indexes[n]])
+      print(probs[n], imagenetLabel[indexes[n]])
    end
    print('')
 
